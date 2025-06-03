@@ -101,31 +101,29 @@ function updateCoordinateScale() {
     const visibleEndY = visibleStartY + workingZoneRect.height / currentZoom;
 
     const firstX = Math.floor(visibleStartX / scaleInterval) * scaleInterval;
-
     for (let x = firstX; x < visibleEndX; x += scaleInterval) {
         const screenX = x * currentZoom + panOffsetX;
         if (screenX >= 0 && screenX <= workingZoneRect.width) {
-             const span = document.createElement('span');
-             span.textContent = Math.round(x);
-             span.style.position = 'absolute';
-             span.style.left = `${screenX}px`;
-             span.style.transform = 'translateX(-50%)';
-             span.style.bottom = '5px';
-             coordScaleX.appendChild(span);
+            const span = document.createElement('span');
+            span.textContent = Math.round(x);
+            span.style.position = 'absolute';
+            span.style.left = `${screenX}px`;
+            span.style.transform = 'translateX(-50%)';
+            span.style.bottom = '5px';
+            coordScaleX.appendChild(span);
         }
     }
 
     const firstY = Math.floor(visibleStartY / scaleInterval) * scaleInterval;
-
     for (let y = firstY; y < visibleEndY; y += scaleInterval) {
-         const screenY = y * currentZoom + panOffsetY;
-         if (screenY >= 0 && screenY <= workingZoneRect.height) {
+        const screenY = y * currentZoom + panOffsetY;
+        if (screenY >= 0 && screenY <= workingZoneRect.height) {
             const span = document.createElement('span');
             span.textContent = Math.round(y);
             span.style.position = 'absolute';
             span.style.top = `${screenY}px`;
-             span.style.transform = 'translateY(-50%)';
-             span.style.right = '5px';
+            span.style.transform = 'translateY(-50%)';
+            span.style.right = '5px';
             coordScaleY.appendChild(span);
         }
     }
@@ -140,7 +138,7 @@ function generateRandomPolygonPoints(numVertices) {
 
     const polarPoints = [];
     for (let i = 0; i < numVertices; i++) {
-        const angle = (i * 2 * Math.PI / numVertices) + (Math.random() * 0.5 - 0.25); // Add small random variation
+        const angle = (i * 2 * Math.PI / numVertices) + (Math.random() * 0.5 - 0.25);
         const radius = minRadius + Math.random() * (maxRadius - minRadius);
         polarPoints.push({ angle, radius });
     }
@@ -272,11 +270,12 @@ workingZone.addEventListener('wheel', (event) => {
 });
 
 workingZone.addEventListener('mousedown', (event) => {
-    if (event.button === 0 && event.target === workingZone) {
+    if (event.button === 0 && !event.target.closest('svg-polygon')) {
         isPanning = true;
         initialPanX = event.clientX;
         initialPanY = event.clientY;
         workingZone.style.cursor = 'grabbing';
+        event.preventDefault();
     }
 });
 
@@ -292,12 +291,16 @@ document.addEventListener('mousemove', (event) => {
         initialPanY = event.clientY;
 
         applyZoomPan();
+        event.preventDefault();
     }
 });
 
-document.addEventListener('mouseup', () => {
-    isPanning = false;
-    workingZone.style.cursor = 'default';
+document.addEventListener('mouseup', (event) => {
+    if (isPanning) {
+        isPanning = false;
+        workingZone.style.cursor = 'default';
+        event.preventDefault();
+    }
 });
 
 function savePolygons() {
