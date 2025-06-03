@@ -136,14 +136,23 @@ function generateRandomPolygonPoints(numVertices) {
     const centerX = 50;
     const centerY = 50;
     const maxRadius = 40;
+    const minRadius = 20;
 
+    const polarPoints = [];
     for (let i = 0; i < numVertices; i++) {
-        const angle = Math.random() * 2 * Math.PI;
-        const radius = Math.random() * maxRadius;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
+        const angle = (i * 2 * Math.PI / numVertices) + (Math.random() * 0.5 - 0.25); // Add small random variation
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        polarPoints.push({ angle, radius });
+    }
+
+    polarPoints.sort((a, b) => a.angle - b.angle);
+
+    for (const point of polarPoints) {
+        const x = centerX + point.radius * Math.cos(point.angle);
+        const y = centerY + point.radius * Math.sin(point.angle);
         points.push(`${x},${y}`);
     }
+
     return points.join(' ');
 }
 
