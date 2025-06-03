@@ -61,6 +61,7 @@ customElements.define('svg-polygon', SvgPolygon);
 const createBtn = document.getElementById('create-btn');
 const saveBtn = document.getElementById('save-btn');
 const resetBtn = document.getElementById('reset-btn');
+const resetZoomBtn = document.getElementById('reset-zoom-btn');
 const bufferZone = document.querySelector('.buffer-zone');
 const workingZone = document.querySelector('.working-zone');
 const workingZoneContent = document.querySelector('.working-zone-content');
@@ -80,6 +81,7 @@ function applyZoomPan() {
     workingZone.style.backgroundSize = `${gridSize * currentZoom}px ${gridSize * currentZoom}px`;
 
     updateCoordinateScale();
+    updateZoomScale();
 }
 
 function updateCoordinateScale() {
@@ -127,6 +129,23 @@ function updateCoordinateScale() {
             coordScaleY.appendChild(span);
         }
     }
+}
+
+function updateZoomScale() {
+    const zoomScale = document.querySelector('.zoom-scale') || document.createElement('div');
+    if (!document.querySelector('.zoom-scale')) {
+        zoomScale.className = 'zoom-scale';
+        zoomScale.style.position = 'absolute';
+        zoomScale.style.top = '10px';
+        zoomScale.style.left = '40px';
+        zoomScale.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        zoomScale.style.color = 'white';
+        zoomScale.style.padding = '5px 10px';
+        zoomScale.style.borderRadius = '3px';
+        zoomScale.style.fontSize = '12px';
+        workingZone.appendChild(zoomScale);
+    }
+    zoomScale.textContent = `Масштаб: ${Math.round(currentZoom * 100)}%`;
 }
 
 function generateRandomPolygonPoints(numVertices) {
@@ -216,29 +235,19 @@ document.addEventListener('drop', (event) => {
             const dropX = event.clientX - targetRect.left;
             const dropY = event.clientY - targetRect.top;
 
-            let newLeft, newTop;
-
             if (targetZone === workingZoneContent) {
-                 const mouseWorkingX = (event.clientX - workingZone.getBoundingClientRect().left - panOffsetX) / currentZoom;
-                 const mouseWorkingY = (event.clientY - workingZone.getBoundingClientRect().top - panOffsetY) / currentZoom;
+                const mouseWorkingX = (event.clientX - workingZone.getBoundingClientRect().left - panOffsetX) / currentZoom;
+                const mouseWorkingY = (event.clientY - workingZone.getBoundingClientRect().top - panOffsetY) / currentZoom;
 
-                 newLeft = mouseWorkingX - (draggedItem.dragOffsetX / currentZoom); 
-                 newTop = mouseWorkingY - (draggedItem.dragOffsetY / currentZoom);
-                 
-                 targetZone.appendChild(draggedItem);
-                 draggedItem.style.position = 'absolute';
-                 draggedItem.style.left = `${newLeft}px`;
-                 draggedItem.style.top = `${newTop}px`;
-
-            } else { 
-                const itemRect = draggedItem.getBoundingClientRect();
-                newLeft = dropX - draggedItem.dragOffsetX;
-                newTop = dropY - draggedItem.dragOffsetY;
-
-                targetZone.appendChild(draggedItem);
                 draggedItem.style.position = 'absolute';
-                draggedItem.style.left = `${newLeft}px`;
-                draggedItem.style.top = `${newTop}px`;
+                draggedItem.style.left = `${mouseWorkingX - (draggedItem.dragOffsetX / currentZoom)}px`;
+                draggedItem.style.top = `${mouseWorkingY - (draggedItem.dragOffsetY / currentZoom)}px`;
+                targetZone.appendChild(draggedItem);
+            } else {
+                draggedItem.style.position = 'absolute';
+                draggedItem.style.left = `${dropX - draggedItem.dragOffsetX}px`;
+                draggedItem.style.top = `${dropY - draggedItem.dragOffsetY}px`;
+                targetZone.appendChild(draggedItem);
             }
         }
         draggedItem = null;
@@ -319,11 +328,25 @@ function savePolygons() {
         });
     });
     localStorage.setItem('savedPolygons', JSON.stringify(polygonsData));
+    localStorage.setItem('currentZoom', currentZoom.toString());
+    localStorage.setItem('panOffset', JSON.stringify({ x: panOffsetX, y: panOffsetY }));
     console.log('Polygons saved to localStorage.');
 }
 
 function loadPolygons() {
     const savedPolygons = localStorage.getItem('savedPolygons');
+    const savedZoom = localStorage.getItem('currentZoom');
+    const savedPanOffset = localStorage.getItem('panOffset');
+
+    if (savedZoom) {
+        currentZoom = parseFloat(savedZoom);
+    }
+    if (savedPanOffset) {
+        const { x, y } = JSON.parse(savedPanOffset);
+        panOffsetX = x;
+        panOffsetY = y;
+    }
+
     if (savedPolygons) {
         const polygonsData = JSON.parse(savedPolygons);
         workingZoneContent.innerHTML = '';
@@ -340,6 +363,7 @@ function loadPolygons() {
         });
         console.log('Polygons loaded from localStorage.');
     }
+    applyZoomPan();
 }
 
 function resetPolygons() {
@@ -348,8 +372,16 @@ function resetPolygons() {
     console.log('Polygons reset.');
 }
 
+function resetZoom() {
+    currentZoom = 1;
+    panOffsetX = 0;
+    panOffsetY = 0;
+    applyZoomPan();
+}
+
 saveBtn.addEventListener('click', savePolygons);
 resetBtn.addEventListener('click', resetPolygons);
+resetZoomBtn.addEventListener('click', resetZoom);
 
 window.addEventListener('load', () => {
     loadPolygons();
