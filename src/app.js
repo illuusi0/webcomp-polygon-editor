@@ -231,19 +231,34 @@ document.addEventListener('drop', (event) => {
         const targetZone = event.target.closest('.buffer-zone') || event.target.closest('.working-zone-content');
         
         if (targetZone) {
-            const targetRect = targetZone.getBoundingClientRect();
-            const dropX = event.clientX - targetRect.left;
-            const dropY = event.clientY - targetRect.top;
-
             if (targetZone === workingZoneContent) {
-                const mouseWorkingX = (event.clientX - workingZone.getBoundingClientRect().left - panOffsetX) / currentZoom;
-                const mouseWorkingY = (event.clientY - workingZone.getBoundingClientRect().top - panOffsetY) / currentZoom;
+                const mouseX = event.clientX;
+                const mouseY = event.clientY;
+
+                const workingZoneRect = workingZone.getBoundingClientRect();
+
+                const relativeX = mouseX - workingZoneRect.left;
+                const relativeY = mouseY - workingZoneRect.top;
+
+                const worldX = (relativeX - panOffsetX) / currentZoom;
+                const worldY = (relativeY - panOffsetY) / currentZoom;
+
+                const scaledOffsetX = draggedItem.dragOffsetX / currentZoom;
+                const scaledOffsetY = draggedItem.dragOffsetY / currentZoom;
 
                 draggedItem.style.position = 'absolute';
-                draggedItem.style.left = `${mouseWorkingX - (draggedItem.dragOffsetX / currentZoom)}px`;
-                draggedItem.style.top = `${mouseWorkingY - (draggedItem.dragOffsetY / currentZoom)}px`;
+                draggedItem.style.left = `${worldX - scaledOffsetX}px`;
+                draggedItem.style.top = `${worldY - scaledOffsetY}px`;
+
                 targetZone.appendChild(draggedItem);
+
+                draggedItem.style.transform = 'none';
+                draggedItem.style.transformOrigin = '0 0';
             } else {
+                const targetRect = targetZone.getBoundingClientRect();
+                const dropX = event.clientX - targetRect.left;
+                const dropY = event.clientY - targetRect.top;
+
                 draggedItem.style.position = 'absolute';
                 draggedItem.style.left = `${dropX - draggedItem.dragOffsetX}px`;
                 draggedItem.style.top = `${dropY - draggedItem.dragOffsetY}px`;

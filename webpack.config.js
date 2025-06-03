@@ -4,27 +4,27 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './src/app.js', // Your main JavaScript file is now in src
+  entry: './src/app.js',
   output: {
-    path: path.resolve(__dirname, 'dist'), // Output directory
-    filename: 'bundle.js', // Output bundle file
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js',
   },
   module: {
     rules: [
       {
         test: /\.css$/i,
-        use: ['style-loader', 'css-loader'], // Use style-loader and css-loader for CSS files
+        use: ['style-loader', 'css-loader'],
       },
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html', // Your source HTML file is now in public
+      template: './public/index.html'
     }),
   ],
   devServer: {
     static: {
-      directory: path.join(__dirname, 'public'), // Serve from the public directory
+      directory: path.join(__dirname, 'public'),
     },
     compress: true,
     port: 9000,
